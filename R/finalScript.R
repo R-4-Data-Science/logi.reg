@@ -51,7 +51,7 @@ logreg_optim <- function(X, y) {
 }
 
 #' Bootstrap Confidence Interval
-#' @description Calculates Bootstrap the confidence intervals for the mean
+#' @description Calculates Bootstrap confidence intervals for the beta from \code{logreg_optim}
 #' @param alpha the designated significance level for the intervals
 #' @param n the number of bootstraps (default is 20)
 #' @param X a numeric vector or matrix containing explanatory variables
@@ -63,44 +63,38 @@ logreg_optim <- function(X, y) {
 #'
 #' @examples
 #'
-#' bootstrap(X,alpha=0.05,n=50)
-bootstrap_ci = function(X, y, alpha, n=20){
+#'
+bootstrap_CI = function(X, y, alpha, n=20){
 
   #Create and empty marix for X obs and vector for y obs
-  boot_betax <- matrix(NA, nrow = n, ncol = ncol(X))
-  boot_betay <- rep(NA, n)
+  boot_beta <- matrix(NA, nrow = n, ncol = ncol(X)+1)
 
   for(i in 1:n){
 
     #Create a matrix with X new data
-    boot_new <- bdata[,sample(nrows(bdata), size=nrow(data), replace = TRUE)]
+    boot_newx <- X[sample(1:n, nrow(X), replace = TRUE),]
 
-    #Create a matrix
-    boot_beta[i] <-
+    #Create a vector with Y new data
+    boot_newy <- y[sample(1:n, length(y), replace = TRUE)]
 
-      for(i in 1:n){
-      dt = data[sample(nrow(data), size=nrow(data),replace=TRUE),]
-      x_boot=dt[,2]
-      y_boot=dt[,1]
-      beta[i,]=logreg_optim(x_boot,y_boot)
-    }
+    #Create a matrix for the new betas from the regression
+    result <- logreg_optim(boot_newx, boot_newy)
+    boot_beta <- as.data.frame(result)
+    boot_beta_mat <- as.matrix(boot_beta)
   }
-  CI=matrix(nrow=n_features,ncol=3)
-  i=0
-  for(i in 1:n_features){
-    b1<-boot(beta[i,],function(u,i) mean(u[i]),R=n)
-    g=boot.ci(b1,type=c("norm","basic","perc"),conf=1-alpha)$norm
-    CI[i,]=as.vector(g)
-  }
-  rownames(CI)=c("intercept",colnames(x))
-  colnames(CI)=c("Level","Lower","Upper")
-  return(CI)
+
+  CI_log = matrix(NA, nrow = 2, ncol = 1)
+  lower<-(alpha/2)*100
+  upper<-(1 - alpha/2)*100
+  quantile(boot_beta_mat[,2], c(alpha/2, 1 - alpha/2))
+  CI_log[1:2,] <- quantile(boot_beta_mat[,2], c(alpha/2, 1 - alpha/2))
+  rownames(CI_log)=c(lower, upper)
+  return(CI_log)
 }
 data <- read.csv("~/Desktop/iris_csv.csv")
 X <- as.matrix(data[,c(1,2,3)])
 y <- data$petalwidth
-bdata = cbind(y, X)
-bootstrapCI(alpha=0.05,n=50)
+bootstrap_CI(X=X, y=y, alpha=0.05,n=50)
 
 #' Logistic curve plot
 #' @description show a visual of logistic regression values against a variable.
