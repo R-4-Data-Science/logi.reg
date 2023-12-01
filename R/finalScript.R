@@ -3,34 +3,33 @@
 #' @description Estimates a beta coefficient from a set of explanatory and response variables
 #' with basic logistic regression using numerical optimization. Also displays initial coefficients used for
 #' the regression from the least squares formula.
-#' @param X a numeric dataset containing explanatory variables
-#' @param y a vector containing response variable
+#' @param X a numeric vector or matrix containing explanatory variables
+#' @param y a numeric vector containing response variable
 #' @return A \code{list} containing the following attributes:
 #' \describe{
-#'      \item{Initial}{Initial coefficients from least squares}
-#'      \item{Estimated}{Estimated coefficients from logistic regression}
+#'      \item{LeastSquares}{Initial coefficients from least squares}
+#'      \item{EstimatedLog}{Estimated coefficients from logistic regression}
 #' }
 #' @importFrom stats
 #' @export
 #' @examples
-#' data=read.csv("iris_csv.csv")
-#' data=data[data$class=="Iris-setosa" | data$class=="Iris-virginica",]
-#' data$class=ifelse(data$class=="Iris-setosa",1,0)
-#' dt = sort(sample(nrow(data), nrow(data)*.7))
-#' train<-data[dt,]
-#' X=as.matrix(train[,1:n_features-1])
-#' y=train[,n_features]
-#' logreg_optim <- function(X, y)
+#' data <- read.csv("iris_csv.csv")
+#' y <- iris_csv$petalwidth
+#' X <- as.matrix(iris_csv[,c(1,2,3)])
+#' logreg_optim(X, y)
 logreg_optim <- function(X, y) {
 
   # Calculate initial coefficients from least-squares formula
-  init_weights <- solve(t(X)%*%X)%*%t(X)%*%y
-
+  init_weights <- function(X, y){
+    weight <- solve(t(X)%*%X)%*%t(X)%*%y
+    weight <- as.vector(weight)
+    return(weight)
+  }
   # Add intercept term to X
   X <- cbind(1, X)
 
   # Begin objective function
-  logi_obj <- function(init_weights) {
+  logi_obj <- function(init_weights, X, y) {
 
     # Probability function
     probs <- 1 / (1 + exp(-X%*%init_weights))
@@ -42,24 +41,21 @@ logreg_optim <- function(X, y) {
   }
 
   # Optimization using the logistic regression objective function
-  optimal <- optim(par = init_weights, fn = logi_obj, X=X,y=y)
+  optimal <- optim(par = init_weights(X, y), fn = logi_obj, X=X,y=y)
 
   # Report estimated optimal coefficients
   est_weights <- optimal$par
 
-  out = list(Initial = init_weights, Estimated = est_weights)
+  out = list(LeastSquares = init_weights(X,y), EstimatedLog = est_weights)
   out
 }
 
-
-
 #' Bootstrap Confidence Interval
-#' @description calculates Bootstrap confidence intervals
-#' @param x a numeric dataset containing explanatory variables
-#' @param y a vector containing response variable
+#' @description Calculates Bootstrap the confidence intervals for the mean
 #' @param alpha the designated significance level for the intervals
 #' @param n the number of bootstraps (default is 20)
-#'
+#' @param X a numeric vector or matrix containing explanatory variables
+#' @param y a numeric vector containing response variable
 #' @return a numeric matrix containing the bootstrap confidence interval
 #' \item{beta}{estimates of the logistic regression model with different samples}
 #' \item{CI}{confidence intervals for each variable and intercept}
@@ -67,26 +63,27 @@ logreg_optim <- function(X, y) {
 #'
 #' @examples
 #'
-#' data=read.csv("iris_csv.csv")
-#' data=data[data$class=="Iris-setosa" | data$class=="Iris-virginica",]
-#' data$class=ifelse(data$class=="Iris-setosa",1,0)
-#' dt = sort(sample(nrow(data), nrow(data)*.7))
-#' train<-data[dt,]
-#' x=as.matrix(train[,1:n_features-1])
-#' y=train[,n_features]
-#'
-#' bootstrapCI(x,y,alpha=0.05,n=20)
-#'
+#' bootstrap(X,alpha=0.05,n=50)
+bootstrap_ci = function(X, y, alpha, n=20){
 
-bootstrap = function(x,y,alpha,n=20){
-  data=data.frame("y"=y,"x"=x)
-  n_features=ncol(data)
-  beta=matrix(nrow=n,ncol=n_features)
+  #Create and empty marix for X obs and vector for y obs
+  boot_betax <- matrix(NA, nrow = n, ncol = ncol(X))
+  boot_betay <- rep(NA, n)
+
   for(i in 1:n){
-    dt = data[sample(nrow(data), size=nrow(data),replace=TRUE),]
-    x_boot=dt[,2]
-    y_boot=dt[,1]
-    beta[i,]=logreg_optim(x_boot,y_boot)
+
+    #Create a matrix with X new data
+    boot_new <- bdata[,sample(nrows(bdata), size=nrow(data), replace = TRUE)]
+
+    #Create a matrix
+    boot_beta[i] <-
+
+      for(i in 1:n){
+      dt = data[sample(nrow(data), size=nrow(data),replace=TRUE),]
+      x_boot=dt[,2]
+      y_boot=dt[,1]
+      beta[i,]=logreg_optim(x_boot,y_boot)
+    }
   }
   CI=matrix(nrow=n_features,ncol=3)
   i=0
@@ -99,29 +96,11 @@ bootstrap = function(x,y,alpha,n=20){
   colnames(CI)=c("Level","Lower","Upper")
   return(CI)
 }
-# Number of boostrap replications
-B <- 500
-
-# Compute the length of vector
-n <- length(student_work)
-
-# Confidence level
-alpha <- 0.05
-
-# Initialisation of
-boot_mean <- rep(NA, B)
-
-# Step 1
-for (i in 1:B){
-  # Step 2
-  student_work_star <- student_work[sample(1:n, replace = TRUE)]
-
-  # Step 3
-  boot_mean[i] <- mean(student_work_star)
-}
-
-# Step 4
-quantile(boot_mean, c(alpha/2, 1 - alpha/2))
+data <- read.csv("~/Desktop/iris_csv.csv")
+X <- as.matrix(data[,c(1,2,3)])
+y <- data$petalwidth
+bdata = cbind(y, X)
+bootstrapCI(alpha=0.05,n=50)
 
 #' Logistic curve plot
 #' @description show a visual of logistic regression values against a variable.
@@ -231,7 +210,6 @@ conf_matrix=function(x,y,cutoff=0.5){
 #' xtest=test[,1:n_features-1]
 #' ytest=test[,n_features]
 #' metricplot(x,y,metric="Accuracy")
-
 metricplot=function(x,y,metric){
   metric_data=matrix(nrow=9,ncol=7)
   for(i in 1:9){
@@ -251,8 +229,9 @@ dt = sort(sample(nrow(data), nrow(data)*.7))
 train<-data[dt,]
 test<-data[-dt,]
 x=as.matrix(train[,1:n_features-1])
-y=train[,n_features]
+y=as.vector(train[,n_features])
 xtest=test[,1:n_features-1]
+xtest=as.vector(xtest)
 ytest=test[,n_features]
 metricplot(x,y,metric="Accuracy")
 
