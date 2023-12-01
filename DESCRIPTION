@@ -1,0 +1,13 @@
+Package: logop
+Type: Package
+Title: What the Package Does (Title Case)
+Version: 0.1.0
+Author: c(
+    person("Lilly", "Byrne", role = "aut"),
+    person("Ankit", "Yadav", role = "aut"))
+Maintainer: The package maintainer <eab0161@auburn.edu>
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
