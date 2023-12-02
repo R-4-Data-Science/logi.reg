@@ -5,17 +5,16 @@
 #' the regression from the least squares formula.
 #' @param X a numeric vector or matrix containing explanatory variables
 #' @param y a numeric vector containing response variable
-#' @return A \code{matrix} containing the following attributes:
-#' \describe{
-#'      \item{LeastSquares}{Initial coefficients from least squares}
-#'      \item{EstimatedLog}{Estimated coefficients from logistic regression}
-#' }
+#' @return a \code\{vector} that contains estimated coefficients of the logistic
+#' regression model
 #' @importFrom stats
 #' @export
 #' @examples
 #' data <- read.csv("iris_csv.csv")
-#' y <- iris_csv$petalwidth
-#' X <- as.matrix(iris_csv[,c(1,2,3)])
+#' data=data[data$class=="Iris-setosa" | data$class=="Iris-virginica",]
+# 'data$class=ifelse(data$class=="Iris-setosa",1,0)
+# 'X <- as.matrix(data[,1:4])
+# 'y <- data[,5]
 #' logreg_optim(X, y)
 logreg_optim <- function(X, y, alpha, n = 20) {
 
@@ -45,16 +44,8 @@ logreg_optim <- function(X, y, alpha, n = 20) {
   # Report estimated optimal coefficients
   est_weights <- optimal$par
   return(est_weights)
-
-  #out = list(estamated.betas = est_weights, b.conf.intervals = bootstrap)
-  #out
 }
-data <- read.csv("~/Desktop/iris_csv.csv")
-data=data[data$class=="Iris-setosa" | data$class=="Iris-virginica",]
-data$class=ifelse(data$class=="Iris-setosa",1,0)
-X <- as.matrix(data[,1:4])
-y <- data[,5]
-logreg_optim(X, y, alpha = 0.05)
+
 
 #' Bootstrap Confidence Interval
 #' @description Calculates Bootstrap confidence intervals for the beta from \code{logreg_optim}
@@ -65,10 +56,12 @@ logreg_optim(X, y, alpha = 0.05)
 #' @return a numeric matrix containing the bootstrap confidence interval
 #' @export
 #' @examples
-#'data <- read.csv("~/Desktop/iris_csv.csv")
-#'X <- as.matrix(data[,c(1,2,3)])
-#'y <- data$petalwidth
-#'bootstrap_CI(X=X, y=y, alpha=0.05,n=50)
+#' data <- read.csv("iris_csv.csv")
+#' data=data[data$class=="Iris-setosa" | data$class=="Iris-virginica",]
+#' data$class=ifelse(data$class=="Iris-setosa",1,0)
+#' X <- as.matrix(data[,1:4])
+#' y <- data[,5]
+#' bootstrap_CI(X=X, y=y, alpha=0.05,n=20)
 bootstrap_CI = function(X, y, alpha, n=20){
 
   numvar <- ncol(X)+1
@@ -93,24 +86,22 @@ bootstrap_CI = function(X, y, alpha, n=20){
   CI_log[1:n,] <- quantile(boot_beta, c(alpha/2, 1 - alpha/2))
   return(t(CI_log))
 }
-data <- read.csv("~/Desktop/iris_csv.csv")
-data=data[data$class=="Iris-setosa" | data$class=="Iris-virginica",]
-data$class=ifelse(data$class=="Iris-setosa",1,0)
-X <- as.matrix(data[,1:4])
-y <- data[,5]
-bootstrap_CI(X=X, y=y, alpha=0.05,n=20)
 
-#' Logistic curve plot
-#' @description show a visual of logistic regression values against a variable.
+#' Logistic Regression Curve Plot
+#' @description shows a visual of logistic regression values against a variable.
 #' @param ytest the numeric y values of the test dataset
 #' @param xtest the numeric x values of the test dataset
 #' @param i the column of x values to be graphed
 #'
 #' @return a line plot of the y values and one independent variable (indicated by `i`)
 #' @export
-#'
 #' @examples
-
+#' data <- read.csv("iris_csv.csv")
+#' data=data[data$class=="Iris-setosa" | data$class=="Iris-virginica",]
+#' data$class=ifelse(data$class=="Iris-setosa",1,0)
+#' X <- as.matrix(data[,1:4])
+#' y <- as.vector(data[,5])
+#' glm<- glm_plot(X,y,2)
 #'
 glm_plot<- function(X, y, i){
 
@@ -138,7 +129,6 @@ y <- as.vector(data[,5])
 glm<- glm_plot(X,y,2)
 
 
-
 #' Confusion Matrix
 #' @description confusion matrix and relevent metrics with cutoff feature.
 #' @param y the predicted y values of the test dataset
@@ -151,18 +141,11 @@ glm<- glm_plot(X,y,2)
 #' data=read.csv("iris_csv.csv")
 #' data=data[data$class=="Iris-setosa" | data$class=="Iris-virginica",]
 #' data$class=ifelse(data$class=="Iris-setosa",1,0)
-#'
-#' n_features=ncol(data)
-#' dt = sort(sample(nrow(data), nrow(data)*.7))
-#' train<-data[dt,]
-#' test<-data[-dt,]
-#' x=as.matrix(train[,1:n_features-1])
-#' y=train[,n_features]
-#' xtest=test[,1:n_features-1]
-#' ytest=test[,n_features]
-#' conf_matrix(x,y)
+#' X <- as.matrix(data[,1:4])
+#' y <- as.vector(data[,5])
+#' conf_matrix(X, y, cutoff = 0.5)
 
-conf_matrix=function(x,y,cutoff=0.5){
+conf_matrix=function(x, y, cutoff = 0.5){
   coeff=logreg_optim(x,y)
   weights=coeff[2:length(coeff)]
   intercept=coeff[1]
@@ -181,6 +164,12 @@ conf_matrix=function(x,y,cutoff=0.5){
   names(metric_data)=c("Prevalence","Accuracy","Sensitivity","Specificity","False Discovery Rate","Diagnostic Odds Ratio","cutoff")
   return(list(confusion_matrix$table,metric_data))
 }
+data <- read.csv("~/Desktop/iris_csv.csv")
+data=data[data$class=="Iris-setosa" | data$class=="Iris-virginica",]
+data$class=ifelse(data$class=="Iris-setosa",1,0)
+X <- as.matrix(data[,1:4])
+y <- as.vector(data[,5])
+conf_matrix(X, y, cutoff = 0.5)
 #' metric Plot
 #' @description provides any required metric plot against a range of cutoff values.
 #' @param y the predicted y values of the test dataset
@@ -213,19 +202,11 @@ metricplot=function(x,y,metric){
 }
 
 
-data=read.csv("~/Desktop/iris_csv.csv")
+data <- read.csv("~/Desktop/iris_csv.csv")
 data=data[data$class=="Iris-setosa" | data$class=="Iris-virginica",]
 data$class=ifelse(data$class=="Iris-setosa",1,0)
-
-n_features=ncol(data)
-dt = sort(sample(nrow(data), nrow(data)*.7))
-train<-data[dt,]
-test<-data[-dt,]
-x=as.matrix(train[,1:n_features-1])
-y=as.vector(train[,n_features])
-xtest=test[,1:n_features-1]
-xtest=as.vector(xtest)
-ytest=test[,n_features]
-metricplot(x,y,metric="Accuracy")
+X <- as.matrix(data[,1:4])
+y <- as.vector(data[,5])
+metricplot(X,y,metric="Accuracy")
 
 
