@@ -1,0 +1,16 @@
+---
+title: "CITATIONS"
+output: html_document
+date: "2023-12-02"
+---
+Our Resources:
+1. OpenAI. (2023). ChatGPT [Large language model]. https://chat.openai.com
+2. https://www.tutorialspoint.com/how-to-find-bootstrap-confidence-interval-in-r
+3. https://stackoverflow.com/questions/42372821/applying-cost-functions-in-r
+4. https://towardsdatascience.com/an-overview-of-the-gradient-descent-algorithm-8645c9e4de1e
+5. https://towardsdatascience.com/logistic-regression-detailed-overview-46c4da4303bc
+ 
+(I'm so sorry this is after the deadline I did not want to leave these out)
+
+
+
